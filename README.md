@@ -31,6 +31,17 @@ AgriSense is a real-time agricultural IoT dashboard designed to help farm owners
 - **NotificationPreference**: User-specific toggles for SMS/Email alerts and phone numbers.
 - **Notification**: History of all alerts sent to users.
 
+## ⚡ Quick Start (Manual Download)
+
+If you have [uv](https://astral.sh) installed, run this to get started in seconds:
+
+1. **Download & Extract** the ZIP from GitHub.
+2. **Open Terminal** in the project folder.
+3. **Run Setup:**
+   ```bash
+   uv sync && uv run manage.py migrate && uv run manage.py runserver
+   ```
+
 ## 📦 Installation & Setup
 
 This project uses `uv` for ultra-fast dependency management.
