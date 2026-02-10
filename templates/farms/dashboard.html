@@ -1,0 +1,155 @@
+{% extends "farms/base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <!-- Header and Farm Selector -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h3>Temperature Dashboard</h3>
+        </div>
+        <div class="col-md-3 ms-auto">
+            <select class="form-select shadow-sm" id="farmSelector" name="farm_id">
+              <option value="">All Farms</option>
+              {% for farm in farms %}
+                  <option value="{{ farm.id }}">{{ farm.name }}</option>
+              {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <div id="chartLoader" class="spinner-border text-primary spinner-border-sm d-none" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Line Chart -->
+    <div id="chartCard" class="card shadow-sm d-none">
+        <div class="card-body">
+            <div style="position: relative; height:400px;">
+                <canvas id="tempChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie Charts -->
+    <div class="row g-3 mt-2 d-none" id="statsRow">
+      <!-- Total Volume Pie -->
+      <div class="col-md-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-white"><strong>Readings Volume</strong></div>
+            <div class="card-body"><canvas id="volumeChart"></canvas></div>
+          </div>
+      </div>
+      <!-- Individual Health Rings -->
+      <div class="col-md-8">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-white"><strong>Farm Health Status</strong></div>
+            <div class="card-body">
+              <div id="healthGrid" class="row row-cols-2 row-cols-md-3 g-2 text-center"></div>
+            </div>
+          </div>
+      </div>
+    </div>
+
+
+    <div id="noDataAlert" class="alert alert-warning d-none shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        No farm data found.
+    </div>
+</div>
+
+<script>
+  // Track all chart instances to destroy them on refresh
+  let charts = {
+      line: null,
+      volume: null,
+      health: [] // Array for multiple mini-charts
+  };
+
+  function loadDashboardData(farmId = '') {
+      $('#chartLoader').removeClass('d-none');
+      $('#noDataAlert, #chartCard, #statsRow').addClass('d-none');
+
+      $.ajax({
+          url: '/api/dashboard-data/',
+          method: 'GET',
+          data: { farm_id: farmId },
+          dataType: 'json',
+          success: function(response) {
+              $('#chartLoader').addClass('d-none');
+
+              // 1. Handle Main Line Chart
+              if (response.line_data && response.line_data.datasets.length > 0) {
+                  $('#chartCard').removeClass('d-none');
+                  const ctx = document.getElementById('tempChart').getContext('2d');
+                  if (charts.line) charts.line.destroy();
+                  charts.line = new Chart(ctx, {
+                      type: 'line',
+                      data: response.line_data,
+                      options: { responsive: true, maintainAspectRatio: false }
+                  });
+              }
+
+              // 2. Handle Volume Pie Chart
+              if (response.volume_data && response.volume_data.counts.length > 0) {
+                  $('#statsRow').removeClass('d-none');
+                  const vCtx = document.getElementById('volumeChart').getContext('2d');
+                  if (charts.volume) charts.volume.destroy();
+                  charts.volume = new Chart(vCtx, {
+                      type: 'pie',
+                      data: {
+                          labels: response.volume_data.labels,
+                          datasets: [{
+                              data: response.volume_data.counts,
+                              backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#0dcaf0']
+                          }]
+                      }
+                  });
+              }
+
+              // 3. Handle Individual Health Rings (Doughnuts)
+              const grid = $('#healthGrid').empty();
+              // Destroy existing mini-charts
+              charts.health.forEach(c => c.destroy());
+              charts.health = [];
+
+              if (response.health_stats) {
+                  response.health_stats.forEach((farm, i) => {
+                      const canvasId = `health-${i}`;
+                      grid.append(`<div class="col"><small class="d-block">${farm.name}</small><canvas id="${canvasId}" style="max-height:100px"></canvas></div>`);
+                      
+                      const hChart = new Chart(document.getElementById(canvasId), {
+                          type: 'doughnut',
+                          data: {
+                              labels: ['In Range', 'Alert'],
+                              datasets: [{
+                                  data: [farm.in, farm.out],
+                                  backgroundColor: ['#198754', '#dc3545']
+                              }]
+                          },
+                          options: { 
+                              plugins: { legend: { display: false } },
+                              cutout: '70%' 
+                          }
+                      });
+                      charts.health.push(hChart);
+                  });
+              }
+
+              if (!response.line_data.datasets.length) {
+                  $('#noDataAlert').removeClass('d-none');
+              }
+          },
+          error: function() {
+              $('#chartLoader').addClass('d-none');
+              $('#noDataAlert').text("Error loading data.").removeClass('d-none').addClass('alert-danger');
+          }
+      });
+  }
+
+  $(document).ready(() => loadDashboardData());
+  $('#farmSelector').on('change', function() { loadDashboardData($(this).val()); });
+</script>
+
+
+{% endblock %}

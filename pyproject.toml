@@ -1,0 +1,17 @@
+[project]
+name = "agrisense"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.0.2",
+    "django-filter>=25.2",
+    "django-sms>=0.7.0",
+    "djangorestframework>=3.16.1",
+    "djangorestframework-simplejwt>=5.5.1",
+    "pymysql>=1.1.2",
+    "python-dotenv>=1.2.1",
+    "sendgrid>=6.12.5",
+    "twilio>=9.10.1",
+]

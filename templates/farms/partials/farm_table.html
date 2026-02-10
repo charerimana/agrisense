@@ -1,0 +1,31 @@
+<table class="table table-hover mb-0">
+    <thead class="table-light">
+        <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Sensor Range</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for farm in farms %}
+        <tr>
+            <td>{{ farm.name }}</td>
+            <td>{{ farm.location }}</td>
+            <td>
+                {% if farm.sensor %}
+                    {{ farm.sensor.min_temp }}°C - {{ farm.sensor.max_temp }}°C
+                {% else %}
+                    <span class="text-muted">No sensor</span>
+                {% endif %}
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline-info open-modal" onclick="openFarmModal({{ farm.id }})">Edit</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteFarm({{ farm.id }})">Del</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center">No farms found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

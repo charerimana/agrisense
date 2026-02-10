@@ -1,0 +1,104 @@
+{% extends "farms/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+      <div class="col-md-6">
+          <h3>My Farms</h3>
+      </div>
+      <div class="col-md-4">
+          <!-- Bootstrap Search Input -->
+          <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+              <input type="text" id="farmSearch" class="form-control" placeholder="Search by name or location..." onkeyup="searchFarms()">
+          </div>
+      </div>
+      <div class="col-md-2 text-end">
+          <button class="btn btn-primary w-100" onclick="openFarmModal()">+ Add Farm</button>
+      </div>
+    </div>
+
+    <!-- The table that AJAX will refresh -->
+    <div id="farmTableContainer" class="card shadow-sm">
+        {% include "farms/partials/farm_table.html" %}
+    </div>
+</div>
+
+<!-- Bootstrap Modal for CRUD -->
+<div class="modal fade" id="farmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add Farm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Form will be loaded here via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  const farmModal = new bootstrap.Modal(document.getElementById('farmModal'));
+
+  function openFarmModal(id = null) {
+      let url = id ? `/farms/edit/${id}/` : `/farms/add/`;
+      $.get(url, function(data) {
+          $('#modalBody').html(data);
+          $('#modalTitle').text(id ? 'Edit Farm' : 'Add Farm');
+          farmModal.show();
+      });
+  }
+
+  // Handle Form Submission via AJAX
+  $(document).on('submit', '#farmForm', function(e) {
+      e.preventDefault();
+      $.ajax({
+          url: $(this).attr('action'),
+          type: 'POST',
+          data: $(this).serialize(),
+          success: function(response) {
+              if (response.success) {
+                  farmModal.hide();
+                  refreshTable(); // Reload the partial table
+              } else {
+                  $('#modalBody').html(response.html); // Show errors
+              }
+          }
+      });
+  });
+
+  // function refreshTable() {
+  //     $.get(window.location.href, function(data) {
+  //         // Find the table container in the returned HTML and swap it
+  //         const newTable = $(data).find('#farmTableContainer').html();
+  //         $('#farmTableContainer').html(newTable);
+  //     });
+  // }
+
+  function deleteFarm(id) {
+      if(confirm("Delete this farm and its sensor?")) {
+          $.post(`/farms/delete/${id}/`, {csrfmiddlewaretoken: '{{ csrf_token }}'}, function() {
+              refreshTable();
+          });
+      }
+  }
+
+  function searchFarms() {
+      let query = $('#farmSearch').val();
+      refreshTable(query);
+  }
+
+  // Updated refreshTable to handle search parameters
+  function refreshTable(searchQuery = '') {
+    // Build the URL with the search parameter
+    let url = window.location.pathname + '?q=' + encodeURIComponent(searchQuery);
+
+    $.get(url, function(data) {
+        // Only swap the inner content of the table container
+        const newTable = $(data).find('#farmTableContainer').html();
+        $('#farmTableContainer').html(newTable);
+    });
+  }
+</script>
+{% endblock %}
