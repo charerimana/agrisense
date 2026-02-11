@@ -21,6 +21,25 @@ class FarmSensorForm(forms.ModelForm):
             self.fields['min_temp'].initial = self.instance.sensor.min_temp
             self.fields['max_temp'].initial = self.instance.sensor.max_temp
 
+    def clean(self):
+        cleaned_data = super().clean()
+        name = cleaned_data.get('name')
+        location = cleaned_data.get('location')
+        owner = self.instance.owner # The owner assigned in the view
+
+        # Check for duplicates, excluding the current instance (important for Updates)
+        exists = Farm.objects.filter(
+            owner=owner, 
+            name__iexact=name, 
+            location=location
+        ).exclude(pk=self.instance.pk).exists()
+
+        if exists:
+            # This error will show up next to the 'name' field in your modal
+            self.add_error('name', f"You already have a farm named '{name}' in {location}.")
+        
+        return cleaned_data
+
 
 class NotificationPreferenceForm(forms.ModelForm):
     class Meta:

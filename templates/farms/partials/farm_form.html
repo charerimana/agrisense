@@ -3,6 +3,13 @@
     <div class="modal-body">
         <h6 class="text-success border-bottom pb-2">Farm Details</h6>
         <div class="mb-3">{{ form.name.label_tag }}{{ form.name }}</div>
+        {% if form.name.errors %}
+        {% for error in form.name.errors %}
+            <div class="text-danger small mt-1">
+                <i class="bi bi-exclamation-circle"></i> {{ error }}
+            </div>
+        {% endfor %}
+        {% endif %}
         <div class="mb-3">{{ form.location.label_tag }}{{ form.location }}</div>
 
         <h6 class="text-success border-bottom pb-2 mt-4">Sensor Thresholds</h6>

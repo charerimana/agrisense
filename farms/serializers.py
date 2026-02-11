@@ -1,10 +1,18 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from .models import Farm, Sensor, SensorReading, Notification, NotificationPreference
 
 class FarmSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farm
         fields = "__all__"
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Farm.objects.all(),
+                fields=['owner', 'name', 'location'],
+                message="This farm already exists in your account."
+            )
+        ]
 
 
 class SensorSerializer(serializers.ModelSerializer):
