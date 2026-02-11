@@ -5,7 +5,11 @@
     <!-- Header and Farm Selector -->
     <div class="row mb-4 align-items-center">
         <div class="col-md-6">
-            <h3>Temperature Dashboard</h3>
+            <h3>Temperature Dashboard
+                <span class="badge rounded-pill bg-success" style="font-size: 10px; vertical-align: middle;">
+                    <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span> LIVE
+                </span>
+            </h3>
         </div>
         <div class="col-md-3 ms-auto">
             <select class="form-select shadow-sm" id="farmSelector" name="farm_id">
@@ -59,96 +63,110 @@
 </div>
 
 <script>
-  // Track all chart instances to destroy them on refresh
-  let charts = {
-      line: null,
-      volume: null,
-      health: [] // Array for multiple mini-charts
-  };
+    let charts = {
+        line: null,
+        volume: null,
+        health: []
+    };
+    let refreshInterval = null;
+    let lastResponseHash = ""; // To track if data actually changed
 
-  function loadDashboardData(farmId = '') {
-      $('#chartLoader').removeClass('d-none');
-      $('#noDataAlert, #chartCard, #statsRow').addClass('d-none');
+    function loadDashboardData(farmId = null, isAutoRefresh = false) {
+        // If farmId is null (from setInterval), grab the current selector value
+        const selectedFarm = farmId !== null ? farmId : $('#farmSelector').val();
+        
+        if (!isAutoRefresh) $('#chartLoader').removeClass('d-none');
 
-      $.ajax({
-          url: '/api/dashboard-data/',
-          method: 'GET',
-          data: { farm_id: farmId },
-          dataType: 'json',
-          success: function(response) {
-              $('#chartLoader').addClass('d-none');
+        $.ajax({
+            url: '/api/dashboard-data/',
+            method: 'GET',
+            data: { farm_id: selectedFarm },
+            dataType: 'json',
+            success: function(response) {
+                $('#chartLoader').addClass('d-none');
 
-              // 1. Handle Main Line Chart
-              if (response.line_data && response.line_data.datasets.length > 0) {
-                  $('#chartCard').removeClass('d-none');
-                  const ctx = document.getElementById('tempChart').getContext('2d');
-                  if (charts.line) charts.line.destroy();
-                  charts.line = new Chart(ctx, {
-                      type: 'line',
-                      data: response.line_data,
-                      options: { responsive: true, maintainAspectRatio: false }
-                  });
-              }
+                // Check if data is exactly the same as last time
+                const currentResponseHash = JSON.stringify(response);
+                if (isAutoRefresh && currentResponseHash === lastResponseHash) {
+                    console.log("No new sensor data found. Skipping redraw.");
+                    return; 
+                }
+                lastResponseHash = currentResponseHash;
 
-              // 2. Handle Volume Pie Chart
-              if (response.volume_data && response.volume_data.counts.length > 0) {
-                  $('#statsRow').removeClass('d-none');
-                  const vCtx = document.getElementById('volumeChart').getContext('2d');
-                  if (charts.volume) charts.volume.destroy();
-                  charts.volume = new Chart(vCtx, {
-                      type: 'pie',
-                      data: {
-                          labels: response.volume_data.labels,
-                          datasets: [{
-                              data: response.volume_data.counts,
-                              backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#0dcaf0']
-                          }]
-                      }
-                  });
-              }
+                // Handle Main Line Chart
+                if (response.line_data && response.line_data.datasets.length > 0) {
+                    $('#chartCard, #statsRow').removeClass('d-none');
+                    $('#noDataAlert').addClass('d-none');
 
-              // 3. Handle Individual Health Rings (Doughnuts)
-              const grid = $('#healthGrid').empty();
-              // Destroy existing mini-charts
-              charts.health.forEach(c => c.destroy());
-              charts.health = [];
+                    const ctx = document.getElementById('tempChart').getContext('2d');
+                    if (charts.line) charts.line.destroy();
+                    charts.line = new Chart(ctx, {
+                        type: 'line',
+                        data: response.line_data,
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            animation: isAutoRefresh ? false : { duration: 800 } // Don't bounce on auto-refresh
+                        }
+                    });
+                }
 
-              if (response.health_stats) {
-                  response.health_stats.forEach((farm, i) => {
-                      const canvasId = `health-${i}`;
-                      grid.append(`<div class="col"><small class="d-block">${farm.name}</small><canvas id="${canvasId}" style="max-height:100px"></canvas></div>`);
-                      
-                      const hChart = new Chart(document.getElementById(canvasId), {
-                          type: 'doughnut',
-                          data: {
-                              labels: ['In Range', 'Alert'],
-                              datasets: [{
-                                  data: [farm.in, farm.out],
-                                  backgroundColor: ['#198754', '#dc3545']
-                              }]
-                          },
-                          options: { 
-                              plugins: { legend: { display: false } },
-                              cutout: '70%' 
-                          }
-                      });
-                      charts.health.push(hChart);
-                  });
-              }
+                // Handle Volume Pie Chart
+                if (response.volume_data && response.volume_data.counts.length > 0) {
+                    const vCtx = document.getElementById('volumeChart').getContext('2d');
+                    if (charts.volume) charts.volume.destroy();
+                    charts.volume = new Chart(vCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: response.volume_data.labels,
+                            datasets: [{
+                                data: response.volume_data.counts,
+                                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#0dcaf0']
+                            }]
+                        }
+                    });
+                }
 
-              if (!response.line_data.datasets.length) {
-                  $('#noDataAlert').removeClass('d-none');
-              }
-          },
-          error: function() {
-              $('#chartLoader').addClass('d-none');
-              $('#noDataAlert').text("Error loading data.").removeClass('d-none').addClass('alert-danger');
-          }
-      });
-  }
+                // Handle Health Rings
+                const grid = $('#healthGrid').empty();
+                charts.health.forEach(c => c.destroy());
+                charts.health = [];
 
-  $(document).ready(() => loadDashboardData());
-  $('#farmSelector').on('change', function() { loadDashboardData($(this).val()); });
+                if (response.health_stats) {
+                    response.health_stats.forEach((farm, i) => {
+                        const canvasId = `health-${i}`;
+                        grid.append(`<div class="col"><small class="d-block">${farm.name}</small><canvas id="${canvasId}" style="max-height:100px"></canvas></div>`);
+                        const hChart = new Chart(document.getElementById(canvasId), {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['In Range', 'Alert'],
+                                datasets: [{ data: [farm.in, farm.out], backgroundColor: ['#198754', '#dc3545'] }]
+                            },
+                            options: { plugins: { legend: { display: false } }, cutout: '70%', animation: isAutoRefresh ? false : true }
+                        });
+                        charts.health.push(hChart);
+                    });
+                }
+            }
+        });
+    }
+
+    function startAutoRefresh() {
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(() => {
+            loadDashboardData(null, true);
+        }, 5000);
+    }
+
+    $(document).ready(() => {
+        loadDashboardData();
+        startAutoRefresh();
+    });
+
+    $('#farmSelector').on('change', function() {
+        lastResponseHash = "";
+        loadDashboardData($(this).val());
+    });
 </script>
 
 
