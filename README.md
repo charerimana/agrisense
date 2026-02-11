@@ -113,8 +113,8 @@ For the sensors/IoT devices, we use JSON Web Tokens (JWT) via the SimpleJWT libr
 Header: `Authorization: Bearer <your_access_token>`
 
 Endpoints:
-- POST `/api/token/`: Obtain a new token pair (Access & Refresh).
-- OST `/api/token/refresh/`: Renew an expired access token using the refresh token.
+- **POST** `/api/token/`: Obtain a new token pair (Access & Refresh).
+- **POST** `/api/token/refresh/`: Renew an expired access token using the refresh token.
 
 ### 3. Permissions
 We use a custom permission class IsOwnerOrSuperUser.
