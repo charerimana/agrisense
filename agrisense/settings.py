@@ -122,7 +122,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-print(secretKeys.TWILIO_API_KEY)
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 ### Console
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -133,6 +135,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = '127.0.0.1'
 EMAIL_PORT = 1025  # Mailpit's default SMTP port
 EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
 
@@ -163,6 +166,9 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.IsAuthenticated',
     # ],
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }
 
 SIMPLE_JWT = {

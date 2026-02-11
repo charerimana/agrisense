@@ -68,14 +68,6 @@
       });
   });
 
-  // function refreshTable() {
-  //     $.get(window.location.href, function(data) {
-  //         // Find the table container in the returned HTML and swap it
-  //         const newTable = $(data).find('#farmTableContainer').html();
-  //         $('#farmTableContainer').html(newTable);
-  //     });
-  // }
-
   function deleteFarm(id) {
       if(confirm("Delete this farm and its sensor?")) {
           $.post(`/farms/delete/${id}/`, {csrfmiddlewaretoken: '{{ csrf_token }}'}, function() {

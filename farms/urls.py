@@ -14,7 +14,8 @@ from .views import (
     CustomLoginView,
     farm_list_view,
     farm_upsert,
-    farm_delete
+    farm_delete,
+    manage_preferences
 )
 
 router = DefaultRouter()
@@ -34,6 +35,8 @@ urlpatterns = [
     path('farms/add/', farm_upsert, name='farm_add'),
     path('farms/edit/<int:pk>/', farm_upsert, name='farm_edit'),
     path('farms/delete/<int:pk>/', farm_delete, name='farm_delete'),
+
+    path('notifications/preferences/', manage_preferences, name='preferences'),
 
     path('login/', CustomLoginView.as_view(), name='login'),
     # path('login/', LoginView.as_view(template_name='farms/login.html'), name='login'),

@@ -1,0 +1,29 @@
+<form id="prefForm" method="post">
+    {% csrf_token %}
+    <div class="form-check form-switch mb-3">
+        {{ form.alerts_enabled }}
+        <label class="form-check-label">Enable All Alerts</label>
+    </div>
+    <div class="ms-4">
+        <div class="form-check mb-2">
+            {{ form.email_enabled }}
+            <label class="form-check-label">Email Notifications</label>
+        </div>
+        <div class="form-check mb-2">
+            {{ form.sms_enabled }}
+            <label class="form-check-label">SMS Notifications</label>
+        </div>
+        <div class="mb-3">
+            <label>Phone Number (for SMS)</label>
+            {{ form.phone_number }}
+            {% if form.phone_number.errors %}
+                <div class="text-danger small">
+                  {{ form.phone_number.errors.0 }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer px-0 pb-0">
+        <button type="submit" class="btn btn-success w-100">Save Preferences</button>
+    </div>
+</form>

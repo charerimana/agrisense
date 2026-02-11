@@ -32,7 +32,7 @@ from .serializers import (
 )
 from .utils import send_alert
 from .permissions import IsOwnerOrSuperUser
-from .forms import FarmSensorForm
+from .forms import FarmSensorForm, NotificationPreferenceForm
 
 class FarmViewSet(ModelViewSet):
     serializer_class = FarmSerializer
@@ -192,7 +192,7 @@ def dashboard_view(request):
 @login_required
 def farm_list_view(request):
     query = request.GET.get('q', '')
-    farms = Farm.objects.filter(owner=request.user).select_related('sensor')
+    farms = Farm.objects.filter(owner=request.user).select_related('sensor').order_by('-id')
 
     if query:
         # Search by farm name OR location name
@@ -240,3 +240,20 @@ def farm_delete(request, pk):
         farm = get_object_or_404(Farm, pk=pk, owner=request.user)
         farm.delete()
         return JsonResponse({'success': True})
+
+@login_required
+def manage_preferences(request):
+    # Get or create preferences for the current user
+    prefs, created = NotificationPreference.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        form = NotificationPreferenceForm(request.POST, instance=prefs)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        else:
+            html = render_to_string('farms/partials/pref_form.html', {'form': form}, request=request)
+            return JsonResponse({'success': False, 'html': html})
+            
+    form = NotificationPreferenceForm(instance=prefs)
+    return render(request, 'farms/partials/pref_form.html', {'form': form})
