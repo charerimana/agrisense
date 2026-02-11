@@ -100,4 +100,25 @@ This project is configured to use **MySQL** on **AWS RDS** for production. To en
   - **Why:** It is a C-extension wrapper. It is significantly faster and more memory-efficient than PyMySQL.
   - **Note:** If you switch to `mysqlclient`, ensure your production environment has the necessary binary dependencies (e.g., `libmysqlclient-dev` or `mysql-devel`).
 
+## 🔐 Authentication & Security
+This project implements a dual-layer authentication system to balance user experience with machine-to-machine security.
+### 1. Session Authentication (Web Dashboard)
+The web interface uses standard Django Session Authentication.
+Login: Users must authenticate via the Bootstrap-styled login page.
+Protection: All dashboard forms are protected against CSRF (Cross-Site Request Forgery) using the `{% csrf_token %}` middleware.
+
+### 2. JWT Authentication (Sensor API)
+For the sensors/IoT devices, we use JSON Web Tokens (JWT) via the SimpleJWT library. This is ideal for stateless, secure communication.
+
+Header: `Authorization: Bearer <your_access_token>`
+
+Endpoints:
+- POST `/api/token/`: Obtain a new token pair (Access & Refresh).
+- OST `/api/token/refresh/`: Renew an expired access token using the refresh token.
+
+### 3. Permissions
+We use a custom permission class IsOwnerOrSuperUser.
+- **Sensors**: Can only post data to IDs they are registered to.
+- **Users**: Can only view dashboard data for the farms they own.
+
 © 2026 AgriSense Monitoring
