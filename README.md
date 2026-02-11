@@ -64,6 +64,10 @@ SECRET_KEY=your-secret-key
 EMAIL_HOST=localhost
 EMAIL_PORT=1025
 
+# For GMAIL
+EMAIL_HOST_PASSWORD=your_gmail_app_password
+EMAIL_PORT=587
+
 # Twilio Config (SMS)
 TWILIO_ACCOUNT_SID=your_sid
 TWILIO_AUTH_TOKEN=your_token
@@ -91,32 +95,9 @@ uv run manage.py runserver
 ## 🗄️ Database & Production Drivers
 
 This project is configured to use **MySQL** on **AWS RDS** for production. To ensure your environment can communicate with the database, follow these dependency guidelines:
-
-- **Current Driver:** `pymysql`. 
-  - **Why:** It is a pure-Python client, making it highly compatible with various Linux distributions (like Ubuntu, Alpine, or Amazon Linux) without requiring heavy C-compilers or system-level MariaDB/MySQL development headers.
-  - **Installation:** Already included in your `uv` environment.
   
-- **Performance Alternative:** `mysqlclient`.
+- **Current Driver:** `mysqlclient`.
   - **Why:** It is a C-extension wrapper. It is significantly faster and more memory-efficient than PyMySQL.
   - **Note:** If you switch to `mysqlclient`, ensure your production environment has the necessary binary dependencies (e.g., `libmysqlclient-dev` or `mysql-devel`).
-
-### 📦 Switching Drivers with `uv`
-
-If you decide to switch for better performance on your AWS instance:
-
-```bash
-# Remove PyMySQL
-uv remove pymysql
-
-# Add the high-performance C-wrapper
-uv add mysqlclient
-```
-
-Note: When using PyMySQL, ensure you have the following in your manage.py or wsgi.py to allow Django to recognize it as the primary MySQL driver:
-
-```bash
-import pymysql
-pymysql.install_as_MySQLdb()
-```
 
 © 2026 AgriSense Monitoring

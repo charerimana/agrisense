@@ -36,7 +36,7 @@
     </div>
 
     <!-- Pie Charts -->
-    <div class="row g-3 mt-2 d-none" id="statsRow">
+    <div class="row g-3 mt-2 mb-4 d-none" id="statsRow">
       <!-- Total Volume Pie -->
       <div class="col-md-4">
           <div class="card shadow-sm h-100">
@@ -85,6 +85,16 @@
             success: function(response) {
                 $('#chartLoader').addClass('d-none');
 
+                const hasLineData = response.line_data && response.line_data.datasets && response.line_data.datasets.length > 0;
+    
+                if (!hasLineData) {
+                    // HIDE everything and SHOW the alert
+                    $('#chartCard, #statsRow').addClass('d-none');
+                    $('#noDataAlert').removeClass('d-none');
+                    lastResponseHash = "";
+                    return; 
+                }
+
                 // Check if data is exactly the same as last time
                 const currentResponseHash = JSON.stringify(response);
                 if (isAutoRefresh && currentResponseHash === lastResponseHash) {
@@ -92,6 +102,9 @@
                     return; 
                 }
                 lastResponseHash = currentResponseHash;
+
+                $('#chartCard, #statsRow').removeClass('d-none');
+                $('#noDataAlert').addClass('d-none');
 
                 // Handle Main Line Chart
                 if (response.line_data && response.line_data.datasets.length > 0) {

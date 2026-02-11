@@ -78,12 +78,25 @@ WSGI_APPLICATION = 'agrisense.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+### DEfault DB sqlite3
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+## AWS RDS DB
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': secretKeys.DB_NAME,
+#         'USER': secretKeys.DB_USER,
+#         'PASSWORD': secretKeys.DB_PASSWORD,
+#         'HOST': secretKeys.DB_HOST,
+#         'PORT': secretKeys.DB_PORT,
+#     }
+# }
 
 
 # Password validation
@@ -131,13 +144,21 @@ STATICFILES_DIRS = [
 
 ### Mailpit, we were about to use sendgrid but our accounts are still in review so email can't be delivered to the users
 ### Then we are using mailpit for testing purpose
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = '127.0.0.1'
+# EMAIL_PORT = 1025  # Mailpit's default SMTP port
+# EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = False
+# EMAIL_HOST_USER = ''
+# EMAIL_HOST_PASSWORD = ''
+
+### USING GMAIL SMTP
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = '127.0.0.1'
-EMAIL_PORT = 1025  # Mailpit's default SMTP port
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = secretKeys.EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = secretKeys.EMAIL_HOST_PASSWORD
 
 #### SEND_GRID ###
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -154,7 +175,7 @@ SMS_BACKEND = 'sms.backends.console.SmsBackend'
 ### Login settings
 # LOGIN_URL = 'login'
 # LOGIN_REDIRECT_URL = 'dashboard' 
-# LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'login'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

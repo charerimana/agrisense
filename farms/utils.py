@@ -1,7 +1,8 @@
 from django.core.mail import send_mail
 # from sendgrid import SendGridAPIClient
 # from sendgrid.helpers.mail import Mail
-# from config import secretKeys
+from twilio.rest import Client
+from config import secretKeys
 from sms import send_sms
 from .models import Notification
 
@@ -11,7 +12,7 @@ def send_alert(user, reading):
     if not prefs or not prefs.alerts_enabled:
         return 
 
-    message = f"ALERT: Temperature {reading.temperature}°C is out of range."
+    message = f"ALERT: Temperature {reading.temperature}°C is out of range for Sensor with ID {reading.sensor.id} at {reading.sensor.farm.name} farm"
 
     if prefs.email_enabled:
         # message = Mail(
@@ -34,12 +35,21 @@ def send_alert(user, reading):
         )
 
     if prefs.sms_enabled and prefs.phone_number:
-        send_sms(
-            message,
-            "+250780289165",
-            [prefs.phone_number],
-            fail_silently=False
+        account_sid = secretKeys.TWILIO_ACCOUNT_SID
+        auth_token = secretKeys.TWILIO_AUTH_TOKEN
+        client = Client(account_sid, auth_token)
+        message = client.messages.create(
+            from_=secretKeys.TWILIO_PHONE_NUMBER,
+            body=message,
+            to=prefs.phone_number
         )
+
+        # send_sms(
+        #     message,
+        #     "+250780289165",
+        #     [prefs.phone_number],
+        #     fail_silently=False
+        # )
 
     Notification.objects.create(
         user=user,
