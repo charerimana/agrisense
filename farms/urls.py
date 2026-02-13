@@ -2,6 +2,7 @@ from django.urls import path, include
 from django.contrib.auth.views import LogoutView, LoginView
 
 from rest_framework.routers import DefaultRouter
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from .views import (
     FarmViewSet,
@@ -41,4 +42,12 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     # path('login/', LoginView.as_view(template_name='farms/login.html'), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+
+    ### Documentation
+    # Download api schema
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # Swagger UI:
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    # Optional Redoc UI:
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]

@@ -15,6 +15,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample
 
 from .models import (
     Farm,
@@ -55,7 +56,25 @@ class SensorViewSet(ModelViewSet):
             return Sensor.objects.all()
         return Sensor.objects.filter(farm__owner=self.request.user)
 
-
+@extend_schema_view(
+    list=extend_schema(summary="List all readings for owned sensors"),
+    create=extend_schema(
+        summary="Submit new sensor data",
+        description="Uploads temperature readings from IoT devices. Ensure the sensor_id belongs to the authenticated user.",
+        examples=[
+            OpenApiExample(
+                'Valid Reading',
+                value={
+                    'sensor': 1,
+                    'temperature': 24.5,
+                    'recorded_at': '2026-02-13T10:00:00Z'
+                },
+                request_only=True,
+            )
+        ]
+    ),
+    retrieve=extend_schema(summary="Get a specific reading detail"),
+)
 class SensorReadingViewSet(ModelViewSet):
     serializer_class = SensorReadingSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrSuperUser]

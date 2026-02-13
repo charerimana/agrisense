@@ -5,6 +5,9 @@ from twilio.rest import Client
 from config import secretKeys
 from sms import send_sms
 from .models import Notification
+import logging
+
+logger = logging.getLogger(__name__)
 
 def send_alert(user, reading):
     prefs = getattr(user, 'notification_preference', None)
@@ -14,7 +17,7 @@ def send_alert(user, reading):
 
     message = f"ALERT: Temperature {reading.temperature}°C is out of range for Sensor with ID {reading.sensor.id} at {reading.sensor.farm.name} farm"
 
-    if prefs.email_enabled:
+    if prefs.email_enabled and user.email:
         # message = Mail(
         #     from_email="hareraloston@gmail.com",
         #     to_emails="harerimanacarlos@gmail.com",
@@ -35,14 +38,19 @@ def send_alert(user, reading):
         )
 
     if prefs.sms_enabled and prefs.phone_number:
-        account_sid = secretKeys.TWILIO_ACCOUNT_SID
-        auth_token = secretKeys.TWILIO_AUTH_TOKEN
-        client = Client(account_sid, auth_token)
-        message = client.messages.create(
-            from_=secretKeys.TWILIO_PHONE_NUMBER,
-            body=message,
-            to=prefs.phone_number
-        )
+        try:
+            account_sid = secretKeys.TWILIO_ACCOUNT_SID
+            auth_token = secretKeys.TWILIO_AUTH_TOKEN
+            client = Client(account_sid, auth_token)
+            message = client.messages.create(
+                from_=secretKeys.TWILIO_PHONE_NUMBER,
+                body=message,
+                to=prefs.phone_number
+            )
+        except Exception as e:
+            # 'exc_info=True' automatically logs the full Stack Trace (where the error happened)
+            logger.error("An unexpected error occurred: %s", e, exc_info=True)
+
 
         # send_sms(
         #     message,
