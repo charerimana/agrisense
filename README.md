@@ -134,4 +134,28 @@ Most used APIs:
 | `/api/readings/` | POST | JWT | Sensor Upload: Submit new temperature data to the cloud. |
 | `/api/dashboard-data/` | GET | JWT | Retrieve aggregated temperature data for Chart.js dashboard visualization. |
 
+## 📖 API Documentation & Localization
+
+AgriSense uses **OpenAPI 3.0** (via `drf-spectacular`) to provide an interactive playground for testing sensor endpoints and reviewing data structures.
+
+### 🌐 Interactive Docs
+Once the server is running, you can access the documentation at:
+- **Swagger UI**: [http://127.0.0.1:8000/api/docs/](http://127.0.0.1:8000/api/docs/)
+- **Redoc**: [http://127.0.0.1:8000/api/redoc/](http://127.0.0.1:8000/api/redoc/)
+- **Schema (YAML)**: [http://127.0.0.1:8000/api/schema/](http://127.0.0.1:8000/api/schema/)
+
+### 🔑 Testing Protected Endpoints (JWT)
+To test the `SensorReading` or `Farm` APIs directly from the browser:
+1. Navigate to the `/api/token/` endpoint in the Swagger UI.
+2. Enter your credentials to receive an `access` token.
+3. Click the **"Authorize"** button at the top of the page.
+4. Input your token using the Bearer format:  
+   `Bearer <your_access_token>`
+5. Use the **"Try it out"** feature on any protected endpoint.
+
+### 🕒 Localization & Time Zone
+The system is optimized for operations in Rwanda:
+- **Time Zone**: `Africa/Kigali` (Central Africa Time - CAT).
+- **Data Handling**: All `recorded_at` timestamps are stored in UTC within the database but are automatically localized to **CAT (UTC+2)** for the dashboard and API responses to ensure local farm managers see accurate data.
+
 © 2026 AgriSense Monitoring
