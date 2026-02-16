@@ -60,14 +60,13 @@ class SensorViewSet(ModelViewSet):
     list=extend_schema(summary="List all readings for owned sensors"),
     create=extend_schema(
         summary="Submit new sensor data",
-        description="Uploads temperature readings from IoT devices. Ensure the sensor_id belongs to the authenticated user.",
+        description="Uploads temperature readings from IoT devices. Ensure the sensor belongs to the authenticated user.",
         examples=[
             OpenApiExample(
                 'Valid Reading',
                 value={
                     'sensor': 1,
                     'temperature': 24.5,
-                    'recorded_at': '2026-02-13T10:00:00Z'
                 },
                 request_only=True,
             )
@@ -119,6 +118,9 @@ class NotificationViewSet(ReadOnlyModelViewSet):
 
 
 class DashboardDataView(APIView):
+    """
+    Preprocess the data for charts.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -134,12 +136,12 @@ class DashboardDataView(APIView):
             Prefetch('readings', queryset=SensorReading.objects.order_by('recorded_at'))
         )
 
-        # --- 1. Line Chart Data (Existing) ---
+        # --- Line Chart Data ---
         all_labels = set()
         line_datasets = []
         colors = ['#0d6efd', '#198754', '#dc3545', '#ffc107']
 
-        # --- 2. Pie Chart Data (New) ---
+        # --- Pie Chart Data ---
         volume_labels = []
         volume_counts = []
         health_stats = []
@@ -188,7 +190,6 @@ class DashboardDataView(APIView):
             },
             "health_stats": health_stats
         })
-
 
 
 class CustomLoginView(LoginView):
