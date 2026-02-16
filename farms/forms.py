@@ -35,7 +35,7 @@ class FarmSensorForm(forms.ModelForm):
         ).exclude(pk=self.instance.pk).exists()
 
         if exists:
-            # This error will show up next to the 'name' field in your modal
+            # This error will show up next to the 'name' field in html modal
             self.add_error('name', f"You already have a farm named '{name}' in {location}.")
         
         return cleaned_data
